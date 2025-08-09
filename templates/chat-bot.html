@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Assistant</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Light Theme (Default) */
+            --bg-primary: #f4f7f9;
+            --bg-secondary: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #6c757d;
+            --header-bg: #2c3e50;
+            --bot-message-bg: #e9ecef;
+            --user-message-bg: #d1e7fd;
+            --accent-color: #3498db;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --info-color: #17a2b8;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2c2c2c;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --header-bg: #1f1f1f;
+            --bot-message-bg: #3a3f44;
+            --user-message-bg: #004a7c;
+            --accent-color: #87CEEB;
+            --border-color: #444;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --success-color: #20c997;
+            --error-color: #ff6b6b;
+            --info-color: #63e6be;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .chat-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: var(--header-bg);
+            color: #fff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            z-index: 10;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-buttons .icon-button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s, transform 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-buttons .icon-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.1);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: var(--bg-secondary);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            max-width: 85%;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+            margin-left: auto;
+        }
+        
+        .message.bot {
+            margin-right: auto;
+        }
+
+        .message-content {
+            padding: 12px 18px;
+            border-radius: 18px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background-color: var(--user-message-bg);
+            color: var(--text-primary);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background-color: var(--bot-message-bg);
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.bot .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 0;
+        }
+        
+        .message.bot .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            animation: bounce 1.3s linear infinite;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .chat-input textarea {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 22px;
+            resize: none;
+            font-size: 16px;
+            margin-right: 10px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.3s;
+        }
+
+        .chat-input textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        .chat-input button {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 18px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            color: var(--accent-color);
+        }
+        
+        .modal-close-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .admin-section {
+            margin-bottom: 25px;
+        }
+
+        .admin-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .admin-button {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+        }
+        
+        .admin-button:hover {
+            background-color: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .admin-button .fa-fw {
+            font-size: 18px;
+        }
+
+        .status-display {
+            background: var(--bg-primary);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Credentials Modal */
+        #credentials-modal .modal-content {
+            max-width: 400px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        .modal-button.primary {
+            background: var(--accent-color);
+            color: #fff;
+        }
+        .modal-button.secondary {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>EndoBot Prueba</h2>
+        <div class="header-buttons">
+            <button id="admin-panel-button" class="icon-button" title="Admin Panel"><i class="fas fa-shield-halved"></i></button>
+            <button id="theme-toggle" class="icon-button" title="Toggle Theme"><i class="fas fa-moon"></i></button>
+        </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages"></div>
+    
+    <div class="chat-input">
+        <textarea id="user-input" placeholder="Type your message here..." rows="1" disabled></textarea>
+        <button id="send-button" disabled><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="admin-modal-overlay">
+    <div class="modal-content admin-panel">
+        <button class="modal-close-button" id="modal-close-btn">&times;</button>
+        <h3><i class="fas fa-cogs"></i> System Control Panel</h3>
+        <div class="admin-section">
+            <h4><i class="fas fa-bolt"></i> Actions</h4>
+            <div class="admin-buttons-grid">
+                <button class="admin-button" id="rebuild-index-button"><i class="fas fa-fw fa-sync-alt"></i> Rebuild Document Index</button>
+                <button class="admin-button" id="download-db-button"><i class="fas fa-fw fa-database"></i> Download QA Database</button>
+                <button class="admin-button" id="download-log-button"><i class="fas fa-fw fa-file-csv"></i> Download Chat Log</button>
+                <button class="admin-button" id="clear-history-button"><i class="fas fa-fw fa-trash"></i> Clear Current Chat</button>
+                <button class="admin-button" id="change-credentials-button"><i class="fas fa-fw fa-key"></i> Change Credentials</button>
+            </div>
+        </div>
+        <div class="admin-section">
+            <h4><i class="fas fa-chart-line"></i> System Status <button id="refresh-status-button" style="margin-left: 10px; font-size: 12px; padding: 4px 8px; cursor: pointer;">Refresh</button></h4>
+            <div id="status-container">
+                <div class="status-display" id="rag-status-display">Enter credentials to view status...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="credentials-modal">
+    <div class="modal-content">
+        <h3 id="credentials-title">Authentication Required</h3>
+        <div class="form-group">
+            <label for="username-input">Username</label>
+            <input type="text" id="username-input" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label for="password-input">Password</label>
+            <input type="password" id="password-input" autocomplete="current-password">
+        </div>
+        <div class="modal-actions">
+            <button id="credentials-cancel-btn" class="modal-button secondary">Cancel</button>
+            <button id="credentials-submit-btn" class="modal-button primary">Submit</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/autosize@4.0.2/dist/autosize.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- STATE MANAGEMENT ---
+        let sessionId = null;
+        let sessionAuth = {
+            admin: null, // { username, password }
+            report: null // { username, password }
+        };
+
+        // --- ELEMENT SELECTORS ---
+        const ui = {
+            sendButton: document.getElementById('send-button'),
+            userInput: document.getElementById('user-input'),
+            chatMessages: document.getElementById('chat-messages'),
+            themeToggle: document.getElementById('theme-toggle'),
+            adminPanelButton: document.getElementById('admin-panel-button'),
+            adminModal: {
+                overlay: document.getElementById('admin-modal-overlay'),
+                closeBtn: document.getElementById('modal-close-btn'),
+                rebuildIndexBtn: document.getElementById('rebuild-index-button'),
+                clearHistoryBtn: document.getElementById('clear-history-button'),
+                downloadDbBtn: document.getElementById('download-db-button'),
+                downloadLogBtn: document.getElementById('download-log-button'),
+                refreshStatusBtn: document.getElementById('refresh-status-button'),
+                changeCredsBtn: document.getElementById('change-credentials-button'),
+                statusDisplay: document.getElementById('rag-status-display')
+            },
+            credsModal: {
+                overlay: document.getElementById('credentials-modal'),
+                title: document.getElementById('credentials-title'),
+                usernameInput: document.getElementById('username-input'),
+                passwordInput: document.getElementById('password-input'),
+                cancelBtn: document.getElementById('credentials-cancel-btn'),
+                submitBtn: document.getElementById('credentials-submit-btn')
+            }
+        };
+
+        autosize(ui.userInput);
+
+        // --- THEME MANAGEMENT ---
+        const applyTheme = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('chatTheme', theme);
+            ui.themeToggle.innerHTML = `<i class="fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}"></i>`;
+        };
+        const toggleTheme = () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+
+        // --- MODAL MANAGEMENT ---
+        const toggleModal = (modalOverlay, show) => modalOverlay.classList.toggle('visible', show);
+
+        // --- CHAT MESSAGING ---
+        const initializeChat = async () => {
+            applyTheme(localStorage.getItem('chatTheme') || 'light');
+            try {
+                const response = await axios.post('/create-session');
+                sessionId = response.data.session_id;
+                ui.userInput.disabled = false;
+                ui.sendButton.disabled = false;
+                appendMessage({sender: 'bot', text: 'Hola! Soy tu asistente personal experto en endodoncia. En que te puedo ayudar hoy?'});
+            } catch (error) {
+                console.error('Error creating session:', error);
+                appendMessage({sender: 'bot', text: 'Problema al inicial la sesión. Por favor refresca la pagina.'});
+            }
+        };
+
+        const appendMessage = ({ sender, text, isHtml = false }) => {
+            const typingIndicator = ui.chatMessages.querySelector('.typing-indicator-wrapper');
+            if (typingIndicator) typingIndicator.remove();
+
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${sender}`;
+            messageElement.innerHTML = `<div class="message-content">${isHtml ? text : `<p>${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`}</div>`;
+            ui.chatMessages.appendChild(messageElement);
+            ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+        };
+        
+        const showTypingIndicator = () => {
+            if (ui.chatMessages.querySelector('.typing-indicator-wrapper')) return;
+            const indicatorWrapper = document.createElement('div');
+            indicatorWrapper.className = 'message bot typing-indicator-wrapper';
+            indicatorWrapper.innerHTML = `
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <span></span><span style="animation-delay: 0.2s"></span><span style="animation-delay: 0.4s"></span>
+                    </div>
+                </div>`;
+            ui.chatMessages.appendChild(indicatorWrapper);
+            ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+        };
+
+        const sendMessage = async () => {
+            if (!sessionId) return;
+            const message = ui.userInput.value.trim();
+            if (message === '') return;
+            
+            appendMessage({sender: 'user', text: message});
+            ui.userInput.value = '';
+            autosize.update(ui.userInput);
+            showTypingIndicator();
+
+            try {
+                const response = await axios.post('/chat-bot', { query: message, session_id: sessionId });
+                
+                const rawResponse = response.data?.answer || 'Perdona, no puedo procesar eso.';
+                const cleanResponse = rawResponse.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+                
+                if (cleanResponse) {
+                    appendMessage({sender: 'bot', text: cleanResponse});
+                } else {
+                    appendMessage({sender: 'bot', text: 'Perdona, he recibido una respuesta vacia.'});
+                }
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                appendMessage({sender: 'bot', text: 'A critical error occurred. Please check the server logs.'});
+            }
+        };
+
+        // --- CREDENTIALS MANAGEMENT ---
+        const getCredentials = (type) => {
+            return new Promise((resolve, reject) => {
+                if (sessionAuth[type]) {
+                    return resolve(sessionAuth[type]);
+                }
+
+                ui.credsModal.title.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} Authentication`;
+                ui.credsModal.usernameInput.value = '';
+                ui.credsModal.passwordInput.value = '';
+                toggleModal(ui.credsModal.overlay, true);
+                ui.credsModal.usernameInput.focus();
+
+                const handleSubmit = () => {
+                    const username = ui.credsModal.usernameInput.value;
+                    const password = ui.credsModal.passwordInput.value;
+                    cleanup();
+                    if (username && password) {
+                        resolve({ username, password });
+                    } else {
+                        reject(new Error('Credentials not provided.'));
+                    }
+                };
+
+                const handleCancel = () => {
+                    cleanup();
+                    reject(new Error('Authentication cancelled.'));
+                };
+                
+                const cleanup = () => {
+                    ui.credsModal.submitBtn.removeEventListener('click', handleSubmit);
+                    ui.credsModal.cancelBtn.removeEventListener('click', handleCancel);
+                    toggleModal(ui.credsModal.overlay, false);
+                };
+
+                ui.credsModal.submitBtn.addEventListener('click', handleSubmit);
+                ui.credsModal.cancelBtn.addEventListener('click', handleCancel);
+            });
+        };
+
+        // --- ADMIN FUNCTIONS ---
+        const handleApiError = (error, type) => {
+            if (error.response?.status === 401) {
+                sessionAuth[type] = null;
+                alert(`${type.charAt(0).toUpperCase() + type.slice(1)} authentication failed. Please try again.`);
+            } else {
+                alert(`An operation failed. Status: ${error.response?.status}. Check server logs.`);
+            }
+        };
+
+        const forceRebuildIndex = async () => {
+            if (!confirm('This will trigger a full re-index. This can take several minutes. Continue?')) return;
+            try {
+                const auth = await getCredentials('admin');
+                appendMessage({sender: 'bot', text: 'System re-index process started...'});
+                toggleModal(ui.adminModal.overlay, false);
+                const response = await axios.post('/admin/rebuild_faiss_index', {}, { auth });
+                sessionAuth.admin = auth;
+                appendMessage({sender: 'bot', text: `✅ SUCCESS: ${response.data.message}`});
+            } catch (error) {
+                if (error.message !== 'Authentication cancelled.') {
+                    appendMessage({ sender: 'bot', text: `❌ ERROR: Re-index process failed.` });
+                    handleApiError(error, 'admin');
+                } else {
+                    console.log("Admin action cancelled by user.");
+                }
+            }
+        };
+
+        const downloadFile = async (url, type, defaultFilename) => {
+            try {
+                const auth = await getCredentials(type);
+                const response = await axios.get(url, { auth, responseType: 'blob' });
+                sessionAuth[type] = auth;
+                const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                const disposition = response.headers['content-disposition'];
+                link.download = disposition?.match(/filename="(.+)"/)?.[1] || defaultFilename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (error) {
+                if (error.message !== 'Authentication cancelled.') handleApiError(error, type);
+            }
+        };
+
+        const clearHistory = async () => {
+            if (!confirm('Clear the current chat on screen and on the server? This cannot be undone.')) return;
+            try {
+                await axios.post('/clear-history', { session_id: sessionId });
+                ui.chatMessages.innerHTML = '';
+                appendMessage({sender: 'bot', text: 'El historial de chat de esta sesión se ha borrado.'});
+                toggleModal(ui.adminModal.overlay, false);
+            } catch (error) {
+                alert('Failed to clear history on the server.');
+            }
+        };
+
+        const refreshAdminStatus = async () => {
+            ui.adminModal.statusDisplay.textContent = 'Authenticating and fetching status...';
+            try {
+                const auth = await getCredentials('admin');
+                const [ragStatusRes, dbStatusRes] = await Promise.all([
+                    axios.get('/admin/faiss_rag_status', { auth }),
+                    axios.get('/db/status', { auth })
+                ]);
+                sessionAuth.admin = auth;
+                let statusText = `--- RAG System ---\n${JSON.stringify(ragStatusRes.data, null, 2)}`;
+                statusText += `\n\n--- Personal DB Monitor ---\n${JSON.stringify(dbStatusRes.data, null, 2)}`;
+                ui.adminModal.statusDisplay.textContent = statusText;
+            } catch (error) {
+                if (error.message !== 'Authentication cancelled.') {
+                     handleApiError(error, 'admin');
+                     ui.adminModal.statusDisplay.textContent = 'Failed to fetch status. Please try again.';
+                } else {
+                    ui.adminModal.statusDisplay.textContent = 'Authentication cancelled. Please provide credentials to see status.';
+                }
+            }
+        };
+
+        // --- EVENT LISTENERS ---
+        ui.sendButton.addEventListener('click', sendMessage);
+        ui.userInput.addEventListener('keypress', (e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage()));
+        ui.themeToggle.addEventListener('click', toggleTheme);
+        ui.adminPanelButton.addEventListener('click', () => toggleModal(ui.adminModal.overlay, true));
+        ui.adminModal.closeBtn.addEventListener('click', () => toggleModal(ui.adminModal.overlay, false));
+        ui.adminModal.overlay.addEventListener('click', (e) => e.target === ui.adminModal.overlay && toggleModal(ui.adminModal.overlay, false));
+        
+        ui.adminModal.rebuildIndexBtn.addEventListener('click', forceRebuildIndex);
+        ui.adminModal.downloadDbBtn.addEventListener('click', () => downloadFile('/admin/download_qa_database', 'admin', 'qa_database.xlsx'));
+        ui.adminModal.downloadLogBtn.addEventListener('click', () => downloadFile('/report', 'report', 'chat_history.csv'));
+        ui.adminModal.clearHistoryBtn.addEventListener('click', clearHistory);
+        ui.adminModal.refreshStatusBtn.addEventListener('click', refreshAdminStatus);
+        ui.adminModal.changeCredsBtn.addEventListener('click', () => {
+            sessionAuth.admin = null;
+            sessionAuth.report = null;
+            alert('Stored credentials have been cleared.');
+            ui.adminModal.statusDisplay.textContent = 'Credentials cleared. Refresh status to re-enter.';
+        });
+
+        // --- STARTUP ---
+        initializeChat();
+    });
+</script>
+</body>
+</html>

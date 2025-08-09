@@ -1,0 +1,31 @@
+
+FLASK_HOST=0.0.0.0
+FLASK_PORT=7860
+# FLASK_DEBUG="False"  # Gradio uses debug in launch()
+
+# --- Groq LLM Models ---
+GROQ_FALLBACK_MODEL=qwen/qwen3-32b
+GROQ_AUXILIARY_MODEL=llama3-8b-8192
+
+RAG_LLM_MODEL=qwen/qwen3-32b
+RAG_TEMPERATURE=0.1
+
+# --- RAG System Configuration ---
+# Embedding model for RAG
+RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2
+
+# Whether to use GPU for RAG embeddings (if available and faiss-gpu is installed)
+
+RAG_EMBEDDING_GPU=false
+
+# Whether to attempt loading an existing RAG index on startup.
+RAG_LOAD_INDEX=true
+
+# Default number of documents the RAG retriever should fetch.
+RAG_RETRIEVER_K=5
+
+GDRIVE_SOURCES_ENABLED=False
+GDRIVE_FOLDER_URL=&HBGGtZ4TJA
+
+LLM_FORMATTER_CONFIDENCE_THRESHOLD=95
+CHAT_HISTORY_TO_SEND=5
